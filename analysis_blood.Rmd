@@ -267,17 +267,72 @@ blood_cat <- blood_cat %>%
       TRUE ~ 1
     )
   )
-ls(blood_cat)
+#ls(blood_cat)
 
-blood_cat <- blood_cat %>%
-  select(ID, White_Blood_Cells_1_CAT, Red_Blood_Cells_1_CAT, Hemoglobin_1_CAT, Hematocrit_1_CAT, Platelets_1_CAT, Neutrophils_1_CAT, Lymphocytes_1_CAT, Monocytes_1_CAT, Eosinophils_1_CAT, Basophils_1_CAT, White_Blood_Cells_2_CAT, Red_Blood_Cells_2_CAT, Hemoglobin_2_CAT, Hematocrit_2_CAT, Platelets_2_CAT, Neutrophils_2_CAT, Lymphocytes_2_CAT, Monocytes_2_CAT, Eosinophils_2_CAT, Basophils_2_CAT, White_Blood_Cells_3_CAT, Red_Blood_Cells_3_CAT, Hemoglobin_3_CAT, Hematocrit_3_CAT, Platelets_3_CAT, Neutrophils_3_CAT, Lymphocytes_3_CAT, Monocytes_3_CAT, Eosinophils_3_CAT, Basophils_3_CAT)
+#blood_cat <- blood_cat %>%
+#  select(ID, White_Blood_Cells_1_CAT, Red_Blood_Cells_1_CAT, Hemoglobin_1_CAT, Hematocrit_1_CAT, Platelets_1_CAT, Neutrophils_1_CAT, Lymphocytes_1_CAT, Monocytes_1_CAT, Eosinophils_1_CAT, Basophils_1_CAT, White_Blood_Cells_2_CAT, Red_Blood_Cells_2_CAT, Hemoglobin_2_CAT, Hematocrit_2_CAT, Platelets_2_CAT, Neutrophils_2_CAT, Lymphocytes_2_CAT, Monocytes_2_CAT, Eosinophils_2_CAT, Basophils_2_CAT, White_Blood_Cells_3_CAT, Red_Blood_Cells_3_CAT, Hemoglobin_3_CAT, Hematocrit_3_CAT, Platelets_3_CAT, Neutrophils_3_CAT, Lymphocytes_3_CAT, Monocytes_3_CAT, Eosinophils_3_CAT, Basophils_3_CAT)
 
-cleaned_data_team_02 <- cleaned_data_team_02 %>%
-  right_join(blood_cat, by = 'ID')
+#cleaned_data_team_02 <- cleaned_data_team_02 %>%
+ # right_join(blood_cat, by = 'ID')
 
 #write.csv(cleaned_data_team_02, "cleaned_data_team_02.csv", row.names = FALSE)
 ```
+
 ```{r}
 print(names(blood_cat))
+```
+
+```{r}
+data_with_adverse_events <- 
+  blood_cat %>%
+    # Проверка изменений для ЭКГ, физических обследований и витальных функций
+    mutate(
+      # ЭКГ
+      adverse_ECG = ifelse(
+        (V1_NORM_ECG < V2_NORM_ECG)  |
+          (V1_NORM_ECG < V3_NORM_ECG) | (V2_NORM_ECG < V3_NORM_ECG),
+        1, 0
+      ),
+      # Физические обследования
+      adverse_PHYS = ifelse(
+        (V1_NORM_PHYS < V2_NORM_PHYS)  |
+          (V1_NORM_PHYS < V3_NORM_PHYS) | (V2_NORM_PHYS < V3_NORM_PHYS),
+        1, 0
+      ),
+      # Витальные функции
+      adverse_VIT = ifelse(
+        (V1_NORM_VIT < V2_NORM_VIT)  |
+          (V1_NORM_VIT < V3_NORM_VIT) | (V2_NORM_VIT < V3_NORM_VIT),
+        1, 0
+      ),
+      # Показатели крови
+      adverse_blood = ifelse(
+        (White_Blood_Cells_1_CAT != White_Blood_Cells_2_CAT | White_Blood_Cells_1_CAT != White_Blood_Cells_3_CAT) |
+        (Red_Blood_Cells_1_CAT != Red_Blood_Cells_2_CAT | Red_Blood_Cells_1_CAT != Red_Blood_Cells_3_CAT) |
+        (Hemoglobin_1_CAT != Hemoglobin_2_CAT | Hemoglobin_1_CAT != Hemoglobin_3_CAT) |
+        (Hematocrit_1_CAT != Hematocrit_2_CAT | Hematocrit_1_CAT != Hematocrit_3_CAT) |
+        (Platelets_1_CAT != Platelets_2_CAT | Platelets_1_CAT != Platelets_3_CAT) |
+        (Neutrophils_1_CAT != Neutrophils_2_CAT | Neutrophils_1_CAT != Neutrophils_3_CAT) |
+        (Lymphocytes_1_CAT != Lymphocytes_2_CAT | Lymphocytes_1_CAT != Lymphocytes_3_CAT) |
+        (Monocytes_1_CAT != Monocytes_2_CAT | Monocytes_1_CAT != Monocytes_3_CAT) |
+        (Eosinophils_1_CAT != Eosinophils_2_CAT | Eosinophils_1_CAT != Eosinophils_3_CAT) |
+        (Basophils_1_CAT != Basophils_2_CAT | Basophils_1_CAT != Basophils_3_CAT),
+        1, 0
+      ),
+      # Определение нежелательных явлений для RMDQ
+      adverse_RMDQ = ifelse(
+        (V1_RMDQ < V2_RMDQ | V1_RMDQ < V3_RMDQ) | V2_RMDQ < V3_RMDQ,
+        1, 0
+      )
+    ) %>%
+    # Общий флаг нежелательных явлений
+    mutate(
+      adverse_event = ifelse(
+        adverse_ECG == 1 | adverse_PHYS == 1 | adverse_VIT == 1 | 
+        adverse_blood == 1 | adverse_RMDQ == 1,
+        1, 0
+      )
+    )
+
 ```
 
