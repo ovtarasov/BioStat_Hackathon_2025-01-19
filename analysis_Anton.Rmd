@@ -1,0 +1,52 @@
+---
+title: "Hackathon"
+author: "Group2"
+date: "2025-01-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+
+# Загрузка данных
+file_path <- "Data/team_2.csv"
+data <- read_csv(file_path, show_col_types = FALSE)
+```
+
+```{r}
+# Сравнение количественных переменных (t-тест Стьюдента)
+numerical_data <- data %>% select(where(is.numeric))
+numerical_results <- map_df(names(numerical_data), ~ {
+  t_test <- t.test(numerical_data[[.x]] ~ data$GRP)
+  tibble(
+    variable = .x,
+    p_value = t_test$p.value,
+    method = "t-test"
+  )
+})
+
+# Сравнение категориальных переменных (χ2-критерий Пирсона)
+categorical_data <- data %>% select(where(~ !is.numeric(.x)))
+categorical_results <- map_df(names(categorical_data), ~ {
+  tbl <- table(categorical_data[[.x]], data$GRP)
+  chi_sq <- chisq.test(tbl)
+  tibble(
+    variable = .x,
+    p_value = chi_sq$p.value,
+    method = "Chi-squared test"
+  )
+})
+
+# Объединение и вывод результатов
+comparison_results <- bind_rows(numerical_results, categorical_results)
+
+comparison_results %>% 
+  mutate(significant = if_else(p_value < 0.05, "Yes", "No")) %>% 
+  arrange(p_value) %>% 
+  print()
+```
+
