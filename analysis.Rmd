@@ -9,9 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(flextable)
+
 ```
 
-## загрузка данных
+## Загрузка данных
 
 ```{r read-data}
 data_team_02 <- read_csv("Data/team_2.csv")
@@ -51,7 +52,7 @@ cleaned_data_team_02 <- data_team_02 %>%
   )), .cols = everything()) 
 
 ```
-## проверка данных
+## Проверка данных
 
 ```{r check-data, include = FALSE}
 
@@ -64,7 +65,7 @@ str(cleaned_data_team_02)
 ```
 Пропущенных значений нет
 
-## создание функции для расчета статистик
+## Создание функции для расчета статистик
 
 ```{r descriptive-stat-function}
 statistics_dbl <- list(
@@ -138,27 +139,87 @@ statistics_dbl <- list(
 ## Расчет описательных статистик и формирование таблицы
 
 ```{r descriptive-stat-table}
+
 #  Теперь выберем переменные которые будем считать 
- data_team_02 %>%
-  select(V0_DEM_GEN, V0_GRP, where(is.numeric)) %>%
-   # сгруппируем по  V0_GRP
-  group_by(V0_GRP) %>% 
-   # добавим статистик
-  summarize(across(where(is.numeric), statistics_dbl )) %>% 
-   # сделаем таблицу в длинном формате 
-  pivot_longer(!V0_GRP) %>% 
-  separate(name, into=c("Переменная", "Статистика"), sep= "___") ->a1
- 
- a1 %>%
+cleaned_data_team_02 %>%
+  select(Gender, Group, where(is.numeric)) %>%
+  # Сгруппируем по Group
+  group_by(Group) %>% 
+  # Добавим статистики
+  summarize(across(where(is.numeric), list(mean = mean, sd = sd, median = median, IQR = IQR), .names = "{col}___{fn}")) %>% 
+  # Сделаем таблицу в длинном формате 
+  pivot_longer(-Group, names_to = "Variable", values_to = "Value") %>% 
+  separate(Variable, into = c("Переменная", "Статистика"), sep = "___") -> descriptive_stats_table
+
+# Оформление таблицы
+descriptive_stats_table %>%
   flextable() %>% 
   theme_box() %>% 
   align(align = "center", part = "all") %>% 
-  merge_v(c("V0_GRP", "Переменная"))  
+  merge_v(c("Group", "Переменная"))
 
 
 ```
 
-## анализ первичной конечной точки
+## Анализ сравнимости групп
+
+```{r warning=FALSE}
+# Сабсет для первого визита
+cleaned_data_team_02_1 <- cleaned_data_team_02 %>% select(-contains("_2"), -contains("_3"))
+
+# Подсчет количества наблюдений в каждой группе
+group_counts <- cleaned_data_team_02_1 %>%
+  count(Group)
+print(group_counts)
+
+# Сравнение количественных переменных (t-тест Стьюдента)
+numerical_data_team_02 <- cleaned_data_team_02_1 %>% select(where(is.numeric))
+numerical_results <- map_df(names(numerical_data_team_02), ~ {
+  t_test <- t.test(numerical_data_team_02[[.x]] ~ cleaned_data_team_02_1$Group)
+  tibble(
+    variable = .x,
+    p_value = t_test$p.value,
+    method = "t-test"
+  )
+})
+
+# Сравнение категориальных переменных (χ2-критерий Пирсона)
+categorical_data_team_02 <- cleaned_data_team_02_1 %>% select(where(~ !is.numeric(.x)))
+categorical_results <- map_df(names(categorical_data_team_02), ~ {
+  tbl <- table(categorical_data_team_02[[.x]], cleaned_data_team_02_1$Group)
+  p_val <- chisq.test(tbl)$p.value
+  tibble(
+    variable = .x,
+    p_value = p_val,
+    method = "Chi-squared test"
+  )
+})
+
+
+comparison_results %>% 
+  arrange(p_value) %>% 
+  print()
+```
+
+```{r}
+# Создание боксплотов для RMDQ_Score_1 и Age
+ggplot(cleaned_data_team_02_1, aes(x = Group, y = RMDQ_Score_1, fill = Group)) +
+  geom_boxplot() +
+  labs(title = "Сравнимость групп по опроснику РОЛАНДА МОРРИСА", x = "Group", y = "RMDQ Score") +
+  theme_minimal()
+
+ggplot(cleaned_data_team_02_1, aes(x = Group, y = Age, fill = Group)) +
+  geom_boxplot() +
+  labs(title = "Сравнимость групп по возрасту", x = "Group", y = "Age") +
+  theme_minimal()
+```
+
+**Вывод**
+На основании предоставленных данных, группы имеют равное количество участников (387 в каждой). Для всех переменных различий между группами не обнаружено даже без поправки на множественные сравнения (FDR), что подтверждает их сопоставимость для дальнейшего анализа.
+
+---
+
+## Анализ первичной конечной точки
 
 Статистическая гипотеза не меньшей эффективности в исследовании была сформулирована следующим образом:
 
