@@ -232,6 +232,7 @@ blood_cat <- blood_cat %>%
       TRUE ~ 1
     )
   )
+<<<<<<< HEAD
 # ls(blood_cat)
 # 
 # blood_cat <- blood_cat %>%
@@ -239,18 +240,32 @@ blood_cat <- blood_cat %>%
 # 
 # cleaned_data_team_02 <- cleaned_data_team_02 %>%
 #   right_join(blood_cat, by = 'ID')
+=======
+#ls(blood_cat)
+
+#blood_cat <- blood_cat %>%
+#  select(ID, White_Blood_Cells_1_CAT, Red_Blood_Cells_1_CAT, Hemoglobin_1_CAT, Hematocrit_1_CAT, Platelets_1_CAT, Neutrophils_1_CAT, Lymphocytes_1_CAT, Monocytes_1_CAT, Eosinophils_1_CAT, Basophils_1_CAT, White_Blood_Cells_2_CAT, Red_Blood_Cells_2_CAT, Hemoglobin_2_CAT, Hematocrit_2_CAT, Platelets_2_CAT, Neutrophils_2_CAT, Lymphocytes_2_CAT, Monocytes_2_CAT, Eosinophils_2_CAT, Basophils_2_CAT, White_Blood_Cells_3_CAT, Red_Blood_Cells_3_CAT, Hemoglobin_3_CAT, Hematocrit_3_CAT, Platelets_3_CAT, Neutrophils_3_CAT, Lymphocytes_3_CAT, Monocytes_3_CAT, Eosinophils_3_CAT, Basophils_3_CAT)
+
+#cleaned_data_team_02 <- cleaned_data_team_02 %>%
+ # right_join(blood_cat, by = 'ID')
+>>>>>>> fee06eedcf073de47294e2d5a02686b26db580a0
 
 #write.csv(cleaned_data_team_02, "cleaned_data_team_02.csv", row.names = FALSE)
 ```
+
 ```{r}
 print(names(blood_cat))
 ```
 
+<<<<<<< HEAD
 
 ## нежелат явления
 
 ```{r}
 # Функция для определения нежелательных явлений
+=======
+```{r}
+>>>>>>> fee06eedcf073de47294e2d5a02686b26db580a0
 data_with_adverse_events <- 
   blood_cat %>%
     # Проверка изменений для ЭКГ, физических обследований и витальных функций
@@ -302,6 +317,7 @@ data_with_adverse_events <-
       )
     )
 
+<<<<<<< HEAD
 
 
 
@@ -346,5 +362,7 @@ chisq_adverse_VIT
  chisq_adverse_blood 
   chisq_adverse_RMDQ 
 
+=======
+>>>>>>> fee06eedcf073de47294e2d5a02686b26db580a0
 ```
 
