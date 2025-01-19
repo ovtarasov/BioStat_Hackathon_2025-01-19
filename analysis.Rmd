@@ -33,16 +33,18 @@ data_team_02 <- data_team_02 %>%
 
 ```{r}
 # Преобразование данных в человекочитаемый вид
+
 cleaned_data_team_02 <- data_team_02 %>%
   mutate(
-    # Преобразование категориальных переменных в факторы с осмысленными уровнями
-    across(contains("Group"), ~ factor(., levels = c("T", "R"), labels = c("Treatment", "Comparator"))),
-    across(contains("Gender"), ~ factor(., levels = c(1, 0), labels = c("Male", "Female"))),
-    across(contains("_NORM_"), ~ factor(., levels = c(0, 1, 2), labels = c("Normal", "Mild deviation", "Significant deviation"))) %>%
+    # Преобразование категориальных переменных в факторы 
+    across(contains("GRP"), ~ factor(., levels = c("T", "R"), labels = c("Treatment", "Comparator"))),
+    across(contains("GEN"), ~ factor(., levels = c(1, 0), labels = c("Male", "Female"))),
+    across(contains("_NORM_"), ~ factor(., levels = c(0, 1, 2), labels = c("Normal", "Mild deviation", "Significant deviation")))
+  )%>%
   rename_with(~ str_replace_all(., c(
-    "V(\\d+)_GRP" = "Group_\\1",
-    "V(\\d+)_DEM_GEN" = "Gender_\\1",
-    "V(\\d+)_DEM_AGE" = "Age_\\1",
+    "V(\\d+)_GRP" = "Group",
+    "V(\\d+)_DEM_GEN" = "Gender",
+    "V(\\d+)_DEM_AGE" = "Age",
     "V(\\d+)_CB_WBC" = "White_Blood_Cells_\\1",
     "V(\\d+)_CB_RBC" = "Red_Blood_Cells_\\1",
     "V(\\d+)_CB_HGB" = "Hemoglobin_\\1",
@@ -55,9 +57,9 @@ cleaned_data_team_02 <- data_team_02 %>%
     "V(\\d+)_CB_BAS#" = "Basophils_\\1",
     "V(\\d+)_NORM_ECG" = "ECG_Status_\\1",
     "V(\\d+)_NORM_PHYS" = "Physical_Status_\\1",
+    "V(\\d+)_RMDQ" = "RMDQ_Score_\\1",
     "V(\\d+)_NORM_VIT" = "Vital_Status_\\1"
   )), .cols = everything()) 
-  )
 
 glimpse(cleaned_data_team_02)
 summary(cleaned_data_team_02)
