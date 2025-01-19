@@ -201,7 +201,7 @@ comparison_results %>%
 # Создание боксплотов для RMDQ_Score_1 и Age
 ggplot(cleaned_data_team_02_1, aes(x = Group, y = RMDQ_Score_1, fill = Group)) +
   geom_boxplot() +
-  labs(title = "Сравнимость групп по опросникуРОЛАНДА МОРРИСА", x = "Group", y = "RMDQ Score") +
+  labs(title = "Сравнимость групп по опроснику РОЛАНДА МОРРИСА", x = "Group", y = "RMDQ Score") +
   theme_minimal()
 
 ggplot(cleaned_data_team_02_1, aes(x = Group, y = Age, fill = Group)) +
