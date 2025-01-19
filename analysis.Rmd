@@ -139,3 +139,10 @@ statistics_dbl <- list(
 
 ```
 
+# анализ первичной конечной точки
+
+```{r effectiveness}
+
+
+
+```
