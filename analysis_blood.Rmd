@@ -19,7 +19,19 @@ data_team_02 <- read_csv("Data/team_2.csv")
 
 
 
+<<<<<<< HEAD
  
+=======
+data_team_02 <- data_team_02 %>% 
+  mutate(
+    V0_DEM_GEN = as.factor(V0_DEM_GEN),
+    V0_GRP = as.factor(V0_GRP)
+  ) %>%
+  mutate(
+    across(contains("_NORM_"), ~ as.factor(.))
+  )
+head(data_team_02)
+>>>>>>> 586c7a551ca76d008db279702f8a0fb60d4eae87
 ```
 
 ## Преобразование данных в человекочитаемый вид
