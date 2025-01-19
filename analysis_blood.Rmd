@@ -27,7 +27,7 @@ data_team_02 <- data_team_02 %>%
   mutate(
     across(contains("_NORM_"), ~ as.factor(.))
   )
-#head(data_team_02)
+head(data_team_02)
 ```
 
 ## Преобразование данных в человекочитаемый вид
