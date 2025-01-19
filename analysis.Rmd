@@ -34,7 +34,7 @@ data_team_02 <- data_team_02 %>%
 ```{r}
 # Преобразование данных в человекочитаемый вид
 
-cleaned_data <- data %>%
+cleaned_data_team_02 <- data_team_02 %>%
   mutate(
     # Преобразование категориальных переменных в факторы 
     across(contains("GRP"), ~ factor(., levels = c("T", "R"), labels = c("Treatment", "Comparator"))),
@@ -61,7 +61,7 @@ cleaned_data <- data %>%
     "V(\\d+)_NORM_VIT" = "Vital_Status_\\1"
   )), .cols = everything()) 
 
-glimpse(cleaned_data)
+glimpse(cleaned_data_team_02)
 ```
 ## проверка данных
 
