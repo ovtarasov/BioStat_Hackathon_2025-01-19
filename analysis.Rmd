@@ -34,6 +34,8 @@ sum(is.na(data_team_02))
 
 summary(data_team_02)
 
+str(data_team_02)
+
 ```
 Пропущенных значений нет
 
