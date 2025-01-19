@@ -23,4 +23,100 @@ data_team_02 <-data_team_02%>%
     V0_DEM_GEN = as.factor(V0_DEM_GEN),
     V0_GRP = as.factor(V0_GRP)
   )
+ 
+```
+
+## создание функции для расчета статистик
+
+```{r}
+statistics_dbl <- list(
+  
+  # Количество значений
+  `__Количество значений` = ~ length(.x) %>% as.character(),
+
+  # Среднее значение (если нет значений, возвращает "Н/П*")
+  `__Ср. знач.` = ~ ifelse(
+    sum(!is.na(.x)) == 0,
+    "Н/П*",
+    mean(.x, na.rm = TRUE) %>% round(2) %>% as.character()
+  ),
+
+  # 95% ДИ (если нет значений, возвращает "Н/П*")
+  `__95% ДИ` = ~ ifelse(
+    sum(!is.na(.x)) == 0,
+    "Н/П*",
+    paste0(
+      t.test(.x)$conf.int[1] %>% round(2),
+      "   ",
+      t.test(.x)$conf.int[2] %>% round(2)
+    ) %>% as.character()
+  ),
+
+  # Коэффициент вариации 
+  `__Коэф. вариации` = ~ ifelse(
+    sum(!is.na(.x)) < 2,  # Изменено условие для обработки недостаточных значений
+    "Н/П*",
+    (sd(.x, na.rm = TRUE) / mean(.x, na.rm = TRUE)) %>% round(2) %>% as.character()
+  ),
+
+  # Стандартное отклонение (если менее 3 значений, возвращает "Н/П*")
+  `__Станд. отклон.` = ~ ifelse(
+    sum(!is.na(.x)) < 3,
+    "Н/П*",
+    sd(.x, na.rm = TRUE) %>% round(2) %>% as.character()
+  ),
+
+  # Медиана (если нет значений, возвращает "Н/П*")
+  `__Медиана` = ~ ifelse(
+    sum(!is.na(.x)) == 0,
+    "Н/П*",
+    median(.x, na.rm = TRUE) %>% round(2) %>% as.character()
+  ),
+
+  # Межквартильный размах (если нет значений, возвращает "Н/П*")
+  `__IQR` = ~ ifelse( 
+    sum(!is.na(.x)) == 0,
+    "Н/П*",
+    IQR(.x, na.rm = TRUE) %>% round(2) %>% as.character()
+  ),
+
+  # Минимум (если нет значений, возвращает "Н/П*")
+  `__минимум` = ~ ifelse(
+    sum(!is.na(.x)) == 0,
+    "Н/П*",
+    min(.x, na.rm = TRUE) %>% round(2) %>% as.character()
+  ),
+
+  # Максимум (если нет значений, возвращает "Н/П*")
+  `__максимум` = ~ ifelse(
+    sum(!is.na(.x)) == 0,
+    "Н/П*",
+    max(.x, na.rm = TRUE) %>% round(2) %>% as.character()
+  )
+)
+```
+
+
+## Расчет описательных статистик и формирование таблицы
+
+```{r}
+#  Теперь выберем переменные которые будем считать 
+ data_team_02 %>%
+  select(V0_DEM_GEN, V0_GRP, where(is.numeric)) %>%
+   # сгруппируем по  V0_GRP
+  group_by(V0_GRP) %>% 
+   # добавим статистик
+  summarize(across(where(is.numeric), statistics_dbl )) %>% 
+   # сделаем таблицу в длинном формате 
+  pivot_longer(!V0_GRP) %>% 
+  separate(name, into=c("Переменная", "Статистика"), sep= "___") ->a1
+ 
+ a1 %>%
+  flextable() %>% 
+  theme_box() %>% 
+  align(align = "center", part = "all") %>% 
+  merge_v(c("V0_GRP", "Переменная"))  
+
+
+```
 
