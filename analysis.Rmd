@@ -16,17 +16,6 @@ library(flextable)
 ```{r read-data}
 data_team_02 <- read_csv("Data/team_2.csv")
 
-
-
-data_team_02 <- data_team_02 %>% 
-  mutate(
-    V0_DEM_GEN = as.factor(V0_DEM_GEN),
-    V0_GRP = as.factor(V0_GRP)
-  ) %>%
-  mutate(
-    across(contains("_NORM_"), ~ as.factor(.))
-  )
- 
 ```
 
 ## Преобразование данных в человекочитаемый вид
@@ -61,18 +50,16 @@ cleaned_data_team_02 <- data_team_02 %>%
     "V(\\d+)_NORM_VIT" = "Vital_Status_\\1"
   )), .cols = everything()) 
 
-glimpse(cleaned_data_team_02)
-summary(cleaned_data_team_02)
 ```
 ## проверка данных
 
 ```{r check-data, include = FALSE}
 
 sum(is.na(data_team_02))
-
-summary(data_team_02)
-
-str(data_team_02)
+sum(is.na(cleaned_data_team_02))
+# glimpse(cleaned_data_team_02)
+summary(cleaned_data_team_02)
+str(cleaned_data_team_02)
 
 ```
 Пропущенных значений нет
