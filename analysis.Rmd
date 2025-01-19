@@ -789,7 +789,8 @@ ggplot(cleaned_data_team_02_1, aes(x = Group, y = Age, fill = Group)) +
 
 $$
 H_0: M_T – M_D ≤ \delta  
-
+$$
+$$
 H_A: M_T – M_D > \delta
 $$
 
