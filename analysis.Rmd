@@ -760,9 +760,9 @@ categorical_results <- map_df(names(categorical_data_team_02), ~ {
 })
 
 
-comparison_results %>% 
-  arrange(p_value) %>% 
-  print()
+# comparison_results %>% 
+#  arrange(p_value) %>% 
+#  print()
 ```
 
 ```{r}
