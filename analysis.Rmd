@@ -13,7 +13,7 @@ library(flextable)
 
 ## загрузка данных
 
-```{r cars}
+```{r read-data}
 data_team_02 <- read_csv("Data/team_2.csv")
 
 
@@ -26,9 +26,20 @@ data_team_02 <-data_team_02%>%
  
 ```
 
+## проверка данных
+
+```{r check-data, include = FALSE}
+
+sum(is.na(data_team_02))
+
+summary(data_team_02)
+
+```
+Пропущенных значений нет
+
 ## создание функции для расчета статистик
 
-```{r}
+```{r descriptive-stat-function}
 statistics_dbl <- list(
   
   # Количество значений
@@ -99,7 +110,7 @@ statistics_dbl <- list(
 
 ## Расчет описательных статистик и формирование таблицы
 
-```{r}
+```{r descriptive-stat-table}
 #  Теперь выберем переменные которые будем считать 
  data_team_02 %>%
   select(V0_DEM_GEN, V0_GRP, where(is.numeric)) %>%
