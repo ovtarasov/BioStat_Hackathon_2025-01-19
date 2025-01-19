@@ -60,6 +60,7 @@ cleaned_data_team_02 <- data_team_02 %>%
   )
 
 glimpse(cleaned_data_team_02)
+summary(cleaned_data_team_02)
 ```
 ## проверка данных
 
