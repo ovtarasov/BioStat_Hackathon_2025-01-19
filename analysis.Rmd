@@ -120,3 +120,105 @@ statistics_dbl <- list(
 
 ```
 
+
+
+## НЕЖЕЛАТЕЛЬНЫЕ ЯВЛЕНИЯ
+
+```{r}
+a2 <- data_team_02 %>%
+  mutate(adverse_RMDQ  = ifelse((V1_RMDQ < V2_RMDQ)  |
+                                  (V1_RMDQ < V3_RMDQ) | (V2_RMDQ < V3_RMDQ) ,
+                                1, 0),
+         adverse_ECG = ifelse(
+           (V1_NORM_ECG < V2_NORM_ECG)  |
+             (V1_NORM_ECG < V3_NORM_ECG) | (V2_NORM_ECG < V3_NORM_ECG),
+           1, 0),
+
+          adverse_PHYS = ifelse(
+        (V1_NORM_PHYS < V2_NORM_PHYS)  |
+             (V1_NORM_PHYS < V3_NORM_PHYS) | (V2_NORM_PHYS< V3_NORM_PHYS),
+           1, 0),
+
+          adverse_VIT = ifelse(
+        (V1_NORM_VIT < V2_NORM_VIT)  |
+             (V1_NORM_VIT < V3_NORM_VIT) | (V2_NORM_VIT< V3_NORM_VIT),
+           1, 0),
+
+  )
+
+
+
+
+# Функция для определения нежелательных явлений
+detect_adverse_events <- function(data) {
+  data_team_02 %>%
+    # Проверка изменений для ЭКГ, физических обследований и витальных функций
+    mutate(
+      # ЭКГ
+      ECG_adverse = ifelse(
+        (V1_NORM_ECG == 0 & (V2_NORM_ECG == 1 | V3_NORM_ECG == 1)) |
+        (V2_NORM_ECG == 0 & V3_NORM_ECG == 1),
+        1, 0
+      ),
+      # Физические обследования
+      PHYS_adverse = ifelse(
+        (V1_NORM_PHYS == 0 & (V2_NORM_PHYS == 1 | V3_NORM_PHYS == 1)) |
+        (V2_NORM_PHYS == 0 & V3_NORM_PHYS == 1),
+        1, 0
+      ),
+      # Витальные функции
+      VIT_adverse = ifelse(
+        (V1_NORM_VIT == 0 & (V2_NORM_VIT == 1 | V3_NORM_VIT == 1)) |
+        (V2_NORM_VIT == 0 & V3_NORM_VIT == 1),
+        1, 0
+      )
+    ) %>%
+    # Проверка изменений для показателей крови
+    #mutate(
+      #across(
+        #starts_with("V1_CB_") & !ends_with("_NORM"),
+        #~ ifelse(
+          #(V1_NORM_ECG == 0 & (V2_NORM_ECG == 1 | V2_NORM_ECG == 2 | V3_NORM_ECG == 1 | V3_NORM_ECG == 2)) |
+          #(V2_NORM_ECG == 0 & (V3_NORM_ECG == 1 | V3_NORM_ECG == 2)), 1, 0),.names = "CB_adverse_{col}")) %>%
+    
+    # Определение нежелательных явлений для RMDQ
+    mutate(
+      adverse_RMDQ = ifelse(
+        (V1_RMDQ < V2_RMDQ | V1_RMDQ < V3_RMDQ) | V2_RMDQ < V3_RMDQ,
+        1, 0)
+    ) %>%
+    # Общий флаг нежелательных явлений
+    mutate(
+      adverse_event = ifelse(
+        ECG_adverse == 1 | PHYS_adverse == 1 | VIT_adverse == 1 | 
+       # rowSums(across(starts_with("CB_adverse_"))) > 0 | 
+          adverse_RMDQ == 1,
+        1, 0
+      )
+    )
+}
+
+# Применение функции к данным
+data_with_adverse_events <- detect_adverse_events(data_team_02)
+
+# Фильтрация пациентов с нежелательными явлениями
+adverse_events_T <- data_with_adverse_events %>%
+  filter(V0_GRP == "T" & adverse_event == 1)
+
+adverse_events_R <- data_with_adverse_events %>%
+  filter(V0_GRP == "R" & adverse_event == 1)
+
+# Вывод результатов
+cat("Пациенты с нежелательными явлениями в группе T (препарат):\n")
+print(adverse_events_T)
+
+cat("\nПациенты с нежелательными явлениями в группе R (референс):\n")
+print(adverse_events_R)
+```
+
+
+
+
+
+
+
