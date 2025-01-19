@@ -1,0 +1,283 @@
+---
+title: "Hackathon"
+author: "Group2"
+date: "2025-01-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(flextable)
+library(dplyr)
+```
+
+## загрузка данных
+
+```{r read-data}
+data_team_02 <- read_csv("Data/team_2.csv")
+
+
+
+data_team_02 <- data_team_02 %>% 
+  mutate(
+    V0_DEM_GEN = as.factor(V0_DEM_GEN),
+    V0_GRP = as.factor(V0_GRP)
+  ) %>%
+  mutate(
+    across(contains("_NORM_"), ~ as.factor(.))
+  )
+ 
+```
+
+## Преобразование данных в человекочитаемый вид
+
+```{r}
+# Преобразование данных в человекочитаемый вид
+
+cleaned_data_team_02 <- data_team_02 %>%
+  mutate(
+    # Преобразование категориальных переменных в факторы 
+    across(contains("GRP"), ~ factor(., levels = c("T", "R"), labels = c("Treatment", "Comparator"))),
+    across(contains("GEN"), ~ factor(., levels = c(1, 0), labels = c("Male", "Female"))),
+    across(contains("_NORM_"), ~ factor(., levels = c(0, 1, 2), labels = c("Normal", "Mild deviation", "Significant deviation")))
+  )%>%
+  rename_with(~ str_replace_all(., c(
+    "V(\\d+)_GRP" = "Group",
+    "V(\\d+)_DEM_GEN" = "Gender",
+    "V(\\d+)_DEM_AGE" = "Age",
+    "V(\\d+)_CB_WBC" = "White_Blood_Cells_\\1",
+    "V(\\d+)_CB_RBC" = "Red_Blood_Cells_\\1",
+    "V(\\d+)_CB_HGB" = "Hemoglobin_\\1",
+    "V(\\d+)_CB_HCT" = "Hematocrit_\\1",
+    "V(\\d+)_CB_PLT" = "Platelets_\\1",
+    "V(\\d+)_CB_NEUT#" = "Neutrophils_\\1",
+    "V(\\d+)_CB_LYM#" = "Lymphocytes_\\1",
+    "V(\\d+)_CB_MON#" = "Monocytes_\\1",
+    "V(\\d+)_CB_EO#" = "Eosinophils_\\1",
+    "V(\\d+)_CB_BAS#" = "Basophils_\\1",
+    "V(\\d+)_NORM_ECG" = "ECG_Status_\\1",
+    "V(\\d+)_NORM_PHYS" = "Physical_Status_\\1",
+    "V(\\d+)_RMDQ" = "RMDQ_Score_\\1",
+    "V(\\d+)_NORM_VIT" = "Vital_Status_\\1"
+  )), .cols = everything()) 
+
+glimpse(cleaned_data_team_02)
+```
+
+
+## Категоризация переменных по анализам крови
+```{r}
+# 0 - ниже реф знач; 1 - реф знач; 2 - выше реф знач;
+# NB! для базофилов 1 - реф значения (не более 1,5% в общей лейкоцитарной формуле), 2 - выше реф знач.
+
+blood_cat <- data_team_02 %>%
+  rename(
+    V1_CB_NEUT. = `V1_CB_NEUT#`,
+    V2_CB_NEUT. = `V2_CB_NEUT#`,
+    V3_CB_NEUT. = `V3_CB_NEUT#`,
+    V1_CB_LYM. = `V1_CB_LYM#`,
+    V2_CB_LYM. = `V2_CB_LYM#`,
+    V3_CB_LYM. = `V3_CB_LYM#`,
+    V1_CB_MON. = `V1_CB_MON#`,
+    V2_CB_MON. = `V2_CB_MON#`,
+    V3_CB_MON. = `V3_CB_MON#`,
+    V1_CB_EO. = `V1_CB_EO#`,
+    V2_CB_EO. = `V2_CB_EO#`,
+    V3_CB_EO. = `V3_CB_EO#`,
+    V1_CB_BAS. = `V1_CB_BAS#`,
+    V2_CB_BAS. = `V2_CB_BAS#`,
+    V3_CB_BAS. = `V3_CB_BAS#`
+  )
+
+blood_cat <- blood_cat %>%
+  mutate(
+    White_Blood_Cells_1_CAT = case_when(
+      V1_CB_WBC < 4 ~ 0,
+      V1_CB_WBC >= 4 & V1_CB_WBC <= 9 ~ 1,
+      V1_CB_WBC > 9 ~ 2
+    ),
+    Red_Blood_Cells_1_CAT = case_when(
+      V0_DEM_GEN == 0 & V1_CB_RBC < 4 ~ 0, # Мужчины
+      V0_DEM_GEN == 0 & V1_CB_RBC >= 4 & V1_CB_RBC <= 5.5 ~ 1,
+      V0_DEM_GEN == 0 & V1_CB_RBC > 5.5 ~ 2,
+      V0_DEM_GEN == 1 & V1_CB_RBC < 3.5 ~ 0, # Женщины
+      V0_DEM_GEN == 1 & V1_CB_RBC >= 3.5 & V1_CB_RBC <= 5 ~ 1,
+      V0_DEM_GEN == 1 & V1_CB_RBC > 5 ~ 2
+    ),
+    Hemoglobin_1_CAT = case_when(
+      V0_DEM_GEN == 0 & V1_CB_HGB < 130 ~ 0,
+      V0_DEM_GEN == 0 & V1_CB_HGB >= 130 & V1_CB_HGB <= 170 ~ 1,
+      V0_DEM_GEN == 0 & V1_CB_HGB > 170 ~ 2,
+      V0_DEM_GEN == 1 & V1_CB_HGB < 120 ~ 0,
+      V0_DEM_GEN == 1 & V1_CB_HGB >= 120 & V1_CB_HGB <= 150 ~ 1,
+      V0_DEM_GEN == 1 & V1_CB_HGB > 150 ~ 2
+    ),
+    Hematocrit_1_CAT = case_when(
+      V0_DEM_GEN == 0 & V1_CB_HCT < 0.4 ~ 0,
+      V0_DEM_GEN == 0 & V1_CB_HCT >= 0.4 & V2_CB_HCT <= 0.5 ~ 1,
+      V0_DEM_GEN == 0 & V1_CB_HCT > 0.5 ~ 2,
+      V0_DEM_GEN == 1 & V1_CB_HCT < 3.5 ~ 0,
+      V0_DEM_GEN == 1 & V1_CB_HCT >= 3.5 & V2_CB_HCT <= 4.4 ~ 1,
+      V0_DEM_GEN == 1 & V1_CB_HCT > 4.4 ~ 2
+    ),
+    Platelets_1_CAT = case_when(
+      V1_CB_PLT < 180 ~ 0,
+      V1_CB_PLT >= 180 & V1_CB_PLT <= 320 ~ 1,
+      V1_CB_PLT > 320 ~ 2
+    ),
+    Neutrophils_1_CAT = case_when(
+      V1_CB_NEUT. < 1.8 ~ 0,
+      V1_CB_NEUT. >= 1.8 & V1_CB_NEUT. <= 6 ~ 1,
+      V1_CB_NEUT. > 6 ~ 2
+    ),
+    Lymphocytes_1_CAT = case_when(
+      V1_CB_LYM. < 1.2 ~ 0,
+      V1_CB_LYM. >= 1.2 & V1_CB_LYM. <= 3.5 ~ 1,
+      V1_CB_LYM. > 3.5 ~ 2
+    ),
+    Monocytes_1_CAT = case_when(
+      V1_CB_MON. < 0.2 ~ 0,
+      V1_CB_MON. >= 0.2 & V1_CB_MON. <= 1 ~ 1,
+      V1_CB_MON. > 1 ~ 2
+    ),
+    Eosinophils_1_CAT = case_when(
+      (V1_CB_EO. / V1_CB_WBC) * 100 < 0.1 ~ 0,
+      (V1_CB_EO. / V1_CB_WBC) * 100 >= 0.1 & (V1_CB_EO. / V1_CB_WBC) * 100 <= 0.5 ~ 1,
+      (V1_CB_EO. / V1_CB_WBC) * 100 > 0.5 ~ 2
+    ),
+    Basophils_1_CAT = case_when(
+      (V1_CB_BAS. / V1_CB_WBC) * 100 > 1.5 ~ 2,
+      TRUE ~ 1
+    ),
+    White_Blood_Cells_2_CAT = case_when(
+      V2_CB_WBC < 4 ~ 0,
+      V2_CB_WBC >= 4 & V2_CB_WBC <= 9 ~ 1,
+      V2_CB_WBC > 9 ~ 2
+    ),
+    Red_Blood_Cells_2_CAT = case_when(
+      V0_DEM_GEN == 0 & V2_CB_RBC < 4 ~ 0, # Мужчины
+      V0_DEM_GEN == 0 & V2_CB_RBC >= 4 & V2_CB_RBC <= 5.5 ~ 1,
+      V0_DEM_GEN == 0 & V2_CB_RBC > 5.5 ~ 2,
+      V0_DEM_GEN == 1 & V2_CB_RBC < 3.5 ~ 0, # Женщины
+      V0_DEM_GEN == 1 & V2_CB_RBC >= 3.5 & V2_CB_RBC <= 5 ~ 1,
+      V0_DEM_GEN == 1 & V2_CB_RBC > 5 ~ 2
+    ),
+    Hemoglobin_2_CAT = case_when(
+      V0_DEM_GEN == 0 & V2_CB_HGB < 130 ~ 0,
+      V0_DEM_GEN == 0 & V2_CB_HGB >= 130 & V2_CB_HGB <= 170 ~ 1,
+      V0_DEM_GEN == 0 & V2_CB_HGB > 170 ~ 2,
+      V0_DEM_GEN == 1 & V2_CB_HGB < 120 ~ 0,
+      V0_DEM_GEN == 1 & V2_CB_HGB >= 120 & V2_CB_HGB <= 150 ~ 1,
+      V0_DEM_GEN == 1 & V2_CB_HGB > 150 ~ 2
+    ),
+    Hematocrit_2_CAT = case_when(
+      V0_DEM_GEN == 0 & V2_CB_HCT < 0.4 ~ 0,
+      V0_DEM_GEN == 0 & V2_CB_HCT >= 0.4 & V2_CB_HCT <= 0.5 ~ 1,
+      V0_DEM_GEN == 0 & V2_CB_HCT > 0.5 ~ 2,
+      V0_DEM_GEN == 1 & V2_CB_HCT < 3.5 ~ 0,
+      V0_DEM_GEN == 1 & V2_CB_HCT >= 3.5 & V2_CB_HCT <= 4.4 ~ 1,
+      V0_DEM_GEN == 1 & V2_CB_HCT > 4.4 ~ 2
+    ),
+    Platelets_2_CAT = case_when(
+      V2_CB_PLT < 180 ~ 0,
+      V2_CB_PLT >= 180 & V2_CB_PLT <= 320 ~ 1,
+      V2_CB_PLT > 320 ~ 2
+    ),
+    Neutrophils_2_CAT = case_when(
+      V2_CB_NEUT. < 1.8 ~ 0,
+      V2_CB_NEUT. >= 1.8 & V1_CB_NEUT. <= 6 ~ 1,
+      V2_CB_NEUT. > 6 ~ 2
+    ),
+    Lymphocytes_2_CAT = case_when(
+      V2_CB_LYM. < 1.2 ~ 0,
+      V2_CB_LYM. >= 1.2 & V1_CB_LYM. <= 3.5 ~ 1,
+      V2_CB_LYM. > 3.5 ~ 2
+    ),
+    Monocytes_2_CAT = case_when(
+      V2_CB_MON. < 0.2 ~ 0,
+      V2_CB_MON. >= 0.2 & V1_CB_MON. <= 1 ~ 1,
+      V2_CB_MON. > 1 ~ 2
+    ),
+    Eosinophils_2_CAT = case_when(
+      (V2_CB_EO. / V2_CB_WBC) * 100 < 0.1 ~ 0,
+      (V2_CB_EO. / V2_CB_WBC) * 100 >= 0.1 & (V2_CB_EO. / V2_CB_WBC) * 100 <= 0.5 ~ 1,
+      (V2_CB_EO. / V2_CB_WBC) * 100 > 0.5 ~ 2
+    ),
+    Basophils_2_CAT = case_when(
+      (V2_CB_BAS. / V2_CB_WBC) * 100 > 1.5 ~ 2,
+      TRUE ~ 1
+    ),
+    White_Blood_Cells_3_CAT = case_when(
+      V3_CB_WBC < 4 ~ 0,
+      V3_CB_WBC >= 4 & V3_CB_WBC <= 9 ~ 1,
+      V3_CB_WBC > 9 ~ 2
+    ),
+    Red_Blood_Cells_3_CAT = case_when(
+      V0_DEM_GEN == 0 & V3_CB_RBC < 4 ~ 0, # Мужчины
+      V0_DEM_GEN == 0 & V3_CB_RBC >= 4 & V3_CB_RBC <= 5.5 ~ 1,
+      V0_DEM_GEN == 0 & V3_CB_RBC > 5.5 ~ 2,
+      V0_DEM_GEN == 1 & V3_CB_RBC < 3.5 ~ 0, # Женщины
+      V0_DEM_GEN == 1 & V3_CB_RBC >= 3.5 & V3_CB_RBC <= 5 ~ 1,
+      V0_DEM_GEN == 1 & V3_CB_RBC > 5 ~ 2
+    ),
+    Hemoglobin_3_CAT = case_when(
+      V0_DEM_GEN == 0 & V3_CB_HGB < 130 ~ 0,
+      V0_DEM_GEN == 0 & V3_CB_HGB >= 130 & V3_CB_HGB <= 170 ~ 1,
+      V0_DEM_GEN == 0 & V3_CB_HGB > 170 ~ 2,
+      V0_DEM_GEN == 1 & V3_CB_HGB < 120 ~ 0,
+      V0_DEM_GEN == 1 & V3_CB_HGB >= 120 & V3_CB_HGB <= 150 ~ 1,
+      V0_DEM_GEN == 1 & V3_CB_HGB > 150 ~ 2
+    ),
+    Hematocrit_3_CAT = case_when(
+      V0_DEM_GEN == 0 & V3_CB_HCT < 0.4 ~ 0,
+      V0_DEM_GEN == 0 & V3_CB_HCT >= 0.4 & V2_CB_HCT <= 0.5 ~ 1,
+      V0_DEM_GEN == 0 & V3_CB_HCT > 0.5 ~ 2,
+      V0_DEM_GEN == 1 & V3_CB_HCT < 3.5 ~ 0,
+      V0_DEM_GEN == 1 & V3_CB_HCT >= 3.5 & V2_CB_HCT <= 4.4 ~ 1,
+      V0_DEM_GEN == 1 & V3_CB_HCT > 4.4 ~ 2
+    ),
+    Platelets_3_CAT = case_when(
+      V3_CB_PLT < 180 ~ 0,
+      V3_CB_PLT >= 180 & V3_CB_PLT <= 320 ~ 1,
+      V3_CB_PLT > 320 ~ 2
+    ),
+    Neutrophils_3_CAT = case_when(
+      V3_CB_NEUT. < 1.8 ~ 0,
+      V3_CB_NEUT. >= 1.8 & V1_CB_NEUT. <= 6 ~ 1,
+      V3_CB_NEUT. > 6 ~ 2
+    ),
+    Lymphocytes_3_CAT = case_when(
+      V3_CB_LYM. < 1.2 ~ 0,
+      V3_CB_LYM. >= 1.2 & V1_CB_LYM. <= 3.5 ~ 1,
+      V3_CB_LYM. > 3.5 ~ 2
+    ),
+    Monocytes_3_CAT = case_when(
+      V3_CB_MON. < 0.2 ~ 0,
+      V3_CB_MON. >= 0.2 & V1_CB_MON. <= 1 ~ 1,
+      V3_CB_MON. > 1 ~ 2
+    ),
+    Eosinophils_3_CAT = case_when(
+      (V3_CB_EO. / V3_CB_WBC) * 100 < 0.1 ~ 0,
+      (V3_CB_EO. / V3_CB_WBC) * 100 >= 0.1 & (V3_CB_EO. / V3_CB_WBC) * 100 <= 0.5 ~ 1,
+      (V3_CB_EO. / V3_CB_WBC) * 100 > 0.5 ~ 2
+    ),
+    Basophils_3_CAT = case_when(
+      (V3_CB_BAS. / V3_CB_WBC) * 100 > 1.5 ~ 2,
+      TRUE ~ 1
+    )
+  )
+ls(blood_cat)
+
+blood_cat <- blood_cat %>%
+  select(ID, White_Blood_Cells_1_CAT, Red_Blood_Cells_1_CAT, Hemoglobin_1_CAT, Hematocrit_1_CAT, Platelets_1_CAT, Neutrophils_1_CAT, Lymphocytes_1_CAT, Monocytes_1_CAT, Eosinophils_1_CAT, Basophils_1_CAT, White_Blood_Cells_2_CAT, Red_Blood_Cells_2_CAT, Hemoglobin_2_CAT, Hematocrit_2_CAT, Platelets_2_CAT, Neutrophils_2_CAT, Lymphocytes_2_CAT, Monocytes_2_CAT, Eosinophils_2_CAT, Basophils_2_CAT, White_Blood_Cells_3_CAT, Red_Blood_Cells_3_CAT, Hemoglobin_3_CAT, Hematocrit_3_CAT, Platelets_3_CAT, Neutrophils_3_CAT, Lymphocytes_3_CAT, Monocytes_3_CAT, Eosinophils_3_CAT, Basophils_3_CAT)
+
+cleaned_data_team_02 <- cleaned_data_team_02 %>%
+  right_join(blood_cat, by = 'ID')
+
+#write.csv(cleaned_data_team_02, "cleaned_data_team_02.csv", row.names = FALSE)
+```
+```{r}
+print(names(blood_cat))
+```
+
