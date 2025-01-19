@@ -18,10 +18,16 @@ data_team_02 <- read_csv("Data/team_2.csv")
 
 
 
-data_team_02 <-data_team_02%>% 
+data_team_02 <- data_team_02 %>% 
   mutate(
     V0_DEM_GEN = as.factor(V0_DEM_GEN),
     V0_GRP = as.factor(V0_GRP)
+  ) %>%
+  mutate(
+   V0_DEM_GEN = recode_factor(V0_DEM_GEN, "0" = "Женский", "1" = "Мужской")
+  ) %>%
+  mutate(
+    across(contains("_NORM_"), ~ as.factor(.))
   )
  
 ```
