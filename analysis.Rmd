@@ -18,6 +18,288 @@ library(flextable)
 data_team_02 <- read_csv("Data/team_2.csv")
 
 ```
+## ПРЕОБРАЗОВАНИЕ датасета. Добаваление НЯ
+
+```{r}
+# 0 - ниже реф знач; 1 - реф знач; 2 - выше реф знач;
+# NB! для базофилов 1 - реф значения (не более 1,5% в общей лейкоцитарной формуле), 2 - выше реф знач.
+
+blood_cat <- data_team_02 %>%
+  rename(
+    V1_CB_NEUT. = `V1_CB_NEUT#`,
+    V2_CB_NEUT. = `V2_CB_NEUT#`,
+    V3_CB_NEUT. = `V3_CB_NEUT#`,
+    V1_CB_LYM. = `V1_CB_LYM#`,
+    V2_CB_LYM. = `V2_CB_LYM#`,
+    V3_CB_LYM. = `V3_CB_LYM#`,
+    V1_CB_MON. = `V1_CB_MON#`,
+    V2_CB_MON. = `V2_CB_MON#`,
+    V3_CB_MON. = `V3_CB_MON#`,
+    V1_CB_EO. = `V1_CB_EO#`,
+    V2_CB_EO. = `V2_CB_EO#`,
+    V3_CB_EO. = `V3_CB_EO#`,
+    V1_CB_BAS. = `V1_CB_BAS#`,
+    V2_CB_BAS. = `V2_CB_BAS#`,
+    V3_CB_BAS. = `V3_CB_BAS#`
+  )
+
+blood_cat <- blood_cat %>%
+  mutate(
+    White_Blood_Cells_1_CAT = case_when(
+      V1_CB_WBC < 4 ~ 0,
+      V1_CB_WBC >= 4 & V1_CB_WBC <= 9 ~ 1,
+      V1_CB_WBC > 9 ~ 2
+    ),
+    Red_Blood_Cells_1_CAT = case_when(
+      V0_DEM_GEN == 0 & V1_CB_RBC < 4 ~ 0, # Мужчины
+      V0_DEM_GEN == 0 & V1_CB_RBC >= 4 & V1_CB_RBC <= 5.5 ~ 1,
+      V0_DEM_GEN == 0 & V1_CB_RBC > 5.5 ~ 2,
+      V0_DEM_GEN == 1 & V1_CB_RBC < 3.5 ~ 0, # Женщины
+      V0_DEM_GEN == 1 & V1_CB_RBC >= 3.5 & V1_CB_RBC <= 5 ~ 1,
+      V0_DEM_GEN == 1 & V1_CB_RBC > 5 ~ 2
+    ),
+    Hemoglobin_1_CAT = case_when(
+      V0_DEM_GEN == 0 & V1_CB_HGB < 130 ~ 0,
+      V0_DEM_GEN == 0 & V1_CB_HGB >= 130 & V1_CB_HGB <= 170 ~ 1,
+      V0_DEM_GEN == 0 & V1_CB_HGB > 170 ~ 2,
+      V0_DEM_GEN == 1 & V1_CB_HGB < 120 ~ 0,
+      V0_DEM_GEN == 1 & V1_CB_HGB >= 120 & V1_CB_HGB <= 150 ~ 1,
+      V0_DEM_GEN == 1 & V1_CB_HGB > 150 ~ 2
+    ),
+    Hematocrit_1_CAT = case_when(
+      V0_DEM_GEN == 0 & V1_CB_HCT < 0.4 ~ 0,
+      V0_DEM_GEN == 0 & V1_CB_HCT >= 0.4 & V2_CB_HCT <= 0.5 ~ 1,
+      V0_DEM_GEN == 0 & V1_CB_HCT > 0.5 ~ 2,
+      V0_DEM_GEN == 1 & V1_CB_HCT < 3.5 ~ 0,
+      V0_DEM_GEN == 1 & V1_CB_HCT >= 3.5 & V2_CB_HCT <= 4.4 ~ 1,
+      V0_DEM_GEN == 1 & V1_CB_HCT > 4.4 ~ 2
+    ),
+    Platelets_1_CAT = case_when(
+      V1_CB_PLT < 180 ~ 0,
+      V1_CB_PLT >= 180 & V1_CB_PLT <= 320 ~ 1,
+      V1_CB_PLT > 320 ~ 2
+    ),
+    Neutrophils_1_CAT = case_when(
+      V1_CB_NEUT. < 1.8 ~ 0,
+      V1_CB_NEUT. >= 1.8 & V1_CB_NEUT. <= 6 ~ 1,
+      V1_CB_NEUT. > 6 ~ 2
+    ),
+    Lymphocytes_1_CAT = case_when(
+      V1_CB_LYM. < 1.2 ~ 0,
+      V1_CB_LYM. >= 1.2 & V1_CB_LYM. <= 3.5 ~ 1,
+      V1_CB_LYM. > 3.5 ~ 2
+    ),
+    Monocytes_1_CAT = case_when(
+      V1_CB_MON. < 0.2 ~ 0,
+      V1_CB_MON. >= 0.2 & V1_CB_MON. <= 1 ~ 1,
+      V1_CB_MON. > 1 ~ 2
+    ),
+    Eosinophils_1_CAT = case_when(
+      (V1_CB_EO. / V1_CB_WBC) * 100 < 0.1 ~ 0,
+      (V1_CB_EO. / V1_CB_WBC) * 100 >= 0.1 & (V1_CB_EO. / V1_CB_WBC) * 100 <= 0.5 ~ 1,
+      (V1_CB_EO. / V1_CB_WBC) * 100 > 0.5 ~ 2
+    ),
+    Basophils_1_CAT = case_when(
+      (V1_CB_BAS. / V1_CB_WBC) * 100 > 1.5 ~ 2,
+      TRUE ~ 1
+    ),
+    White_Blood_Cells_2_CAT = case_when(
+      V2_CB_WBC < 4 ~ 0,
+      V2_CB_WBC >= 4 & V2_CB_WBC <= 9 ~ 1,
+      V2_CB_WBC > 9 ~ 2
+    ),
+    Red_Blood_Cells_2_CAT = case_when(
+      V0_DEM_GEN == 0 & V2_CB_RBC < 4 ~ 0, # Мужчины
+      V0_DEM_GEN == 0 & V2_CB_RBC >= 4 & V2_CB_RBC <= 5.5 ~ 1,
+      V0_DEM_GEN == 0 & V2_CB_RBC > 5.5 ~ 2,
+      V0_DEM_GEN == 1 & V2_CB_RBC < 3.5 ~ 0, # Женщины
+      V0_DEM_GEN == 1 & V2_CB_RBC >= 3.5 & V2_CB_RBC <= 5 ~ 1,
+      V0_DEM_GEN == 1 & V2_CB_RBC > 5 ~ 2
+    ),
+    Hemoglobin_2_CAT = case_when(
+      V0_DEM_GEN == 0 & V2_CB_HGB < 130 ~ 0,
+      V0_DEM_GEN == 0 & V2_CB_HGB >= 130 & V2_CB_HGB <= 170 ~ 1,
+      V0_DEM_GEN == 0 & V2_CB_HGB > 170 ~ 2,
+      V0_DEM_GEN == 1 & V2_CB_HGB < 120 ~ 0,
+      V0_DEM_GEN == 1 & V2_CB_HGB >= 120 & V2_CB_HGB <= 150 ~ 1,
+      V0_DEM_GEN == 1 & V2_CB_HGB > 150 ~ 2
+    ),
+    Hematocrit_2_CAT = case_when(
+      V0_DEM_GEN == 0 & V2_CB_HCT < 0.4 ~ 0,
+      V0_DEM_GEN == 0 & V2_CB_HCT >= 0.4 & V2_CB_HCT <= 0.5 ~ 1,
+      V0_DEM_GEN == 0 & V2_CB_HCT > 0.5 ~ 2,
+      V0_DEM_GEN == 1 & V2_CB_HCT < 3.5 ~ 0,
+      V0_DEM_GEN == 1 & V2_CB_HCT >= 3.5 & V2_CB_HCT <= 4.4 ~ 1,
+      V0_DEM_GEN == 1 & V2_CB_HCT > 4.4 ~ 2
+    ),
+    Platelets_2_CAT = case_when(
+      V2_CB_PLT < 180 ~ 0,
+      V2_CB_PLT >= 180 & V2_CB_PLT <= 320 ~ 1,
+      V2_CB_PLT > 320 ~ 2
+    ),
+    Neutrophils_2_CAT = case_when(
+      V2_CB_NEUT. < 1.8 ~ 0,
+      V2_CB_NEUT. >= 1.8 & V1_CB_NEUT. <= 6 ~ 1,
+      V2_CB_NEUT. > 6 ~ 2
+    ),
+    Lymphocytes_2_CAT = case_when(
+      V2_CB_LYM. < 1.2 ~ 0,
+      V2_CB_LYM. >= 1.2 & V1_CB_LYM. <= 3.5 ~ 1,
+      V2_CB_LYM. > 3.5 ~ 2
+    ),
+    Monocytes_2_CAT = case_when(
+      V2_CB_MON. < 0.2 ~ 0,
+      V2_CB_MON. >= 0.2 & V1_CB_MON. <= 1 ~ 1,
+      V2_CB_MON. > 1 ~ 2
+    ),
+    Eosinophils_2_CAT = case_when(
+      (V2_CB_EO. / V2_CB_WBC) * 100 < 0.1 ~ 0,
+      (V2_CB_EO. / V2_CB_WBC) * 100 >= 0.1 & (V2_CB_EO. / V2_CB_WBC) * 100 <= 0.5 ~ 1,
+      (V2_CB_EO. / V2_CB_WBC) * 100 > 0.5 ~ 2
+    ),
+    Basophils_2_CAT = case_when(
+      (V2_CB_BAS. / V2_CB_WBC) * 100 > 1.5 ~ 2,
+      TRUE ~ 1
+    ),
+    White_Blood_Cells_3_CAT = case_when(
+      V3_CB_WBC < 4 ~ 0,
+      V3_CB_WBC >= 4 & V3_CB_WBC <= 9 ~ 1,
+      V3_CB_WBC > 9 ~ 2
+    ),
+    Red_Blood_Cells_3_CAT = case_when(
+      V0_DEM_GEN == 0 & V3_CB_RBC < 4 ~ 0, # Мужчины
+      V0_DEM_GEN == 0 & V3_CB_RBC >= 4 & V3_CB_RBC <= 5.5 ~ 1,
+      V0_DEM_GEN == 0 & V3_CB_RBC > 5.5 ~ 2,
+      V0_DEM_GEN == 1 & V3_CB_RBC < 3.5 ~ 0, # Женщины
+      V0_DEM_GEN == 1 & V3_CB_RBC >= 3.5 & V3_CB_RBC <= 5 ~ 1,
+      V0_DEM_GEN == 1 & V3_CB_RBC > 5 ~ 2
+    ),
+    Hemoglobin_3_CAT = case_when(
+      V0_DEM_GEN == 0 & V3_CB_HGB < 130 ~ 0,
+      V0_DEM_GEN == 0 & V3_CB_HGB >= 130 & V3_CB_HGB <= 170 ~ 1,
+      V0_DEM_GEN == 0 & V3_CB_HGB > 170 ~ 2,
+      V0_DEM_GEN == 1 & V3_CB_HGB < 120 ~ 0,
+      V0_DEM_GEN == 1 & V3_CB_HGB >= 120 & V3_CB_HGB <= 150 ~ 1,
+      V0_DEM_GEN == 1 & V3_CB_HGB > 150 ~ 2
+    ),
+    Hematocrit_3_CAT = case_when(
+      V0_DEM_GEN == 0 & V3_CB_HCT < 0.4 ~ 0,
+      V0_DEM_GEN == 0 & V3_CB_HCT >= 0.4 & V2_CB_HCT <= 0.5 ~ 1,
+      V0_DEM_GEN == 0 & V3_CB_HCT > 0.5 ~ 2,
+      V0_DEM_GEN == 1 & V3_CB_HCT < 3.5 ~ 0,
+      V0_DEM_GEN == 1 & V3_CB_HCT >= 3.5 & V2_CB_HCT <= 4.4 ~ 1,
+      V0_DEM_GEN == 1 & V3_CB_HCT > 4.4 ~ 2
+    ),
+    Platelets_3_CAT = case_when(
+      V3_CB_PLT < 180 ~ 0,
+      V3_CB_PLT >= 180 & V3_CB_PLT <= 320 ~ 1,
+      V3_CB_PLT > 320 ~ 2
+    ),
+    Neutrophils_3_CAT = case_when(
+      V3_CB_NEUT. < 1.8 ~ 0,
+      V3_CB_NEUT. >= 1.8 & V1_CB_NEUT. <= 6 ~ 1,
+      V3_CB_NEUT. > 6 ~ 2
+    ),
+    Lymphocytes_3_CAT = case_when(
+      V3_CB_LYM. < 1.2 ~ 0,
+      V3_CB_LYM. >= 1.2 & V1_CB_LYM. <= 3.5 ~ 1,
+      V3_CB_LYM. > 3.5 ~ 2
+    ),
+    Monocytes_3_CAT = case_when(
+      V3_CB_MON. < 0.2 ~ 0,
+      V3_CB_MON. >= 0.2 & V1_CB_MON. <= 1 ~ 1,
+      V3_CB_MON. > 1 ~ 2
+    ),
+    Eosinophils_3_CAT = case_when(
+      (V3_CB_EO. / V3_CB_WBC) * 100 < 0.1 ~ 0,
+      (V3_CB_EO. / V3_CB_WBC) * 100 >= 0.1 & (V3_CB_EO. / V3_CB_WBC) * 100 <= 0.5 ~ 1,
+      (V3_CB_EO. / V3_CB_WBC) * 100 > 0.5 ~ 2
+    ),
+    Basophils_3_CAT = case_when(
+      (V3_CB_BAS. / V3_CB_WBC) * 100 > 1.5 ~ 2,
+      TRUE ~ 1
+    )
+  )
+
+
+# Функция для определения нежелательных явлений
+data_with_adverse_events <- 
+  blood_cat %>%
+    # Проверка изменений для ЭКГ, физических обследований и витальных функций
+    mutate(
+      # ЭКГ
+      adverse_ECG = ifelse(
+        (V1_NORM_ECG < V2_NORM_ECG)  |
+          (V1_NORM_ECG < V3_NORM_ECG) | (V2_NORM_ECG < V3_NORM_ECG),
+        1, 0
+      ),
+      # Физические обследования
+      adverse_PHYS = ifelse(
+        (V1_NORM_PHYS < V2_NORM_PHYS)  |
+          (V1_NORM_PHYS < V3_NORM_PHYS) | (V2_NORM_PHYS < V3_NORM_PHYS),
+        1, 0
+      ),
+      # Витальные функции
+      adverse_VIT = ifelse(
+        (V1_NORM_VIT < V2_NORM_VIT)  |
+          (V1_NORM_VIT < V3_NORM_VIT) | (V2_NORM_VIT < V3_NORM_VIT),
+        1, 0
+      ),
+      # Показатели крови
+      adverse_blood = ifelse(
+        (White_Blood_Cells_1_CAT != White_Blood_Cells_2_CAT | White_Blood_Cells_1_CAT != White_Blood_Cells_3_CAT) |
+        (Red_Blood_Cells_1_CAT != Red_Blood_Cells_2_CAT | Red_Blood_Cells_1_CAT != Red_Blood_Cells_3_CAT) |
+        (Hemoglobin_1_CAT != Hemoglobin_2_CAT | Hemoglobin_1_CAT != Hemoglobin_3_CAT) |
+        (Hematocrit_1_CAT != Hematocrit_2_CAT | Hematocrit_1_CAT != Hematocrit_3_CAT) |
+        (Platelets_1_CAT != Platelets_2_CAT | Platelets_1_CAT != Platelets_3_CAT) |
+        (Neutrophils_1_CAT != Neutrophils_2_CAT | Neutrophils_1_CAT != Neutrophils_3_CAT) |
+        (Lymphocytes_1_CAT != Lymphocytes_2_CAT | Lymphocytes_1_CAT != Lymphocytes_3_CAT) |
+        (Monocytes_1_CAT != Monocytes_2_CAT | Monocytes_1_CAT != Monocytes_3_CAT) |
+        (Eosinophils_1_CAT != Eosinophils_2_CAT | Eosinophils_1_CAT != Eosinophils_3_CAT) |
+        (Basophils_1_CAT != Basophils_2_CAT | Basophils_1_CAT != Basophils_3_CAT),
+        1, 0
+      ),
+      # Определение нежелательных явлений для RMDQ
+      adverse_RMDQ = ifelse(
+        (V1_RMDQ < V2_RMDQ | V1_RMDQ < V3_RMDQ) | V2_RMDQ < V3_RMDQ,
+        1, 0
+      )
+    ) %>%
+    # Общий флаг нежелательных явлений
+    mutate(
+      adverse_event = ifelse(
+        adverse_ECG == 1 | adverse_PHYS == 1 | adverse_VIT == 1 | 
+        adverse_blood == 1 | adverse_RMDQ == 1,
+        1, 0
+      )
+    )
+
+
+```
+## ХИ КВАДРАТ
+```{r}
+
+chisq_adverse_event <- chisq.test(table(data_with_adverse_events$V0_GRP, data_with_adverse_events$adverse_event))
+ chisq_adverse_ECG <- chisq.test(table(data_with_adverse_events$V0_GRP, data_with_adverse_events$adverse_ECG))
+ 
+ chisq_adverse_PHYS <- chisq.test(table(data_with_adverse_events$V0_GRP, data_with_adverse_events$adverse_PHYS))
+ chisq_adverse_VIT<- chisq.test(table(data_with_adverse_events$V0_GRP, data_with_adverse_events$adverse_VIT))
+ chisq_adverse_blood <- chisq.test(table(data_with_adverse_events$V0_GRP, data_with_adverse_events$adverse_blood))
+  chisq_adverse_RMDQ <- chisq.test(table(data_with_adverse_events$V0_GRP, data_with_adverse_events$adverse_RMDQ))
+ 
+ 
+    chisq_adverse_event,
+    chisq_adverse_ECG ,
+    chisq_adverse_PHYS,
+    chisq_adverse_VIT,
+    chisq_adverse_blood ,
+    chisq_adverse_RMDQ
+  
+
+```
+
+
+
 
 ## Преобразование данных в человекочитаемый вид
 
