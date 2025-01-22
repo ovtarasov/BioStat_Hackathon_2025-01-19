@@ -759,10 +759,17 @@ categorical_results <- map_df(names(categorical_data_team_02), ~ {
   )
 })
 
+# Объединение результатов и поправка на множественные сравнения (FDR)
+comparison_results <- bind_rows(numerical_results, categorical_results) %>%
+  mutate(
+    p_adj = p.adjust(p_value, method = "fdr"),
+    significant = if_else(p_adj < 0.05, "Yes", "No", missing = "NA")
+  )
 
-# comparison_results %>% 
-#  arrange(p_value) %>% 
-#  print()
+comparison_results %>% 
+  arrange(p_adj) %>% 
+  print()
+
 ```
 
 ```{r}
